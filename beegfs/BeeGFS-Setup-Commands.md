@@ -1,12 +1,103 @@
-# BeeGFS Metadata & Storage Node Setup (Single Machine)
+# BeeGFS Complete Setup Guide (Single Machine)
 
-This document provides a complete, documented list of all key commands used to manually set up **BeeGFS metadata and storage services on a single machine** without creating partitions.
+This document provides a complete, documented list of all key commands used to manually set up **BeeGFS management, metadata and storage services on a single machine** without creating partitions.
 
 ---
 
-## ✅ Complete Setup Process
+## 🧭 BeeGFS Management Node Setup Guide
 
-### 🔧 Step 1: Create Directories for Metadata & Storage
+### 📌 Purpose of Management Service
+
+The **BeeGFS Management Service** is responsible for:
+
+* Tracking the BeeGFS file system's metadata: node list, target mappings, mirror groups, storage pools, and quotas.
+* Storing the system configuration database (`mgmtd.sqlite`).
+* Not performance-critical unless you're using quotas with frequent updates.
+
+By default, it uses:
+
+```
+/var/lib/beegfs/mgmtd.sqlite
+```
+
+---
+
+### 🔧 Step 1: Create Directory for Management Database (Optional)
+
+```bash
+sudo mkdir -p /data/beegfs/mgmtd
+```
+
+**Why**: If you want to store the management database in a custom location instead of the default `/var/lib/beegfs/`.
+
+---
+
+### ⚙️ Step 2: Configure the Management Node
+
+Edit the config file:
+
+```bash
+sudo nano /etc/beegfs/beegfs-mgmtd.toml
+```
+
+Add/modify these lines for a **test system**:
+
+```toml
+# Optional: Custom database file location
+db-file = "/data/beegfs/mgmtd/mgmtd.sqlite"
+
+# Disable TLS (for local testing only)
+tls-disable = true
+
+# Disable connection-based authentication (not for production)
+auth-disable = true
+```
+
+**Why**: 
+- `tls-disable = true` lets you skip generating TLS certs for testing
+- `auth-disable = true` disables client-node identity verification
+- These are **unsafe** in production but okay for test/dev
+
+---
+
+### 🔄 Step 3: Initialize the Management Database
+
+> This must be done **before starting the service** for the first time.
+
+```bash
+sudo /opt/beegfs/sbin/beegfs-mgmtd --init
+```
+
+**What this does**:
+- Creates and initializes the `mgmtd.sqlite` file (management database)
+- Required for the management daemon to run successfully
+
+---
+
+### ▶️ Step 4: Start and Enable the Management Service
+
+```bash
+sudo systemctl start beegfs-mgmtd
+sudo systemctl enable beegfs-mgmtd
+```
+
+**Check service status**:
+```bash
+sudo systemctl status beegfs-mgmtd
+```
+
+**View logs** (optional):
+```bash
+journalctl -u beegfs-mgmtd --no-pager
+```
+
+**Why**: This starts the management service and enables it to start automatically on boot.
+
+---
+
+## ✅ Metadata & Storage Setup Process
+
+### 🔧 Step 5: Create Directories for Metadata & Storage
 
 ```bash
 sudo mkdir -p /data/beegfs/beegfs_meta
@@ -17,7 +108,7 @@ sudo mkdir -p /data/beegfs/beegfs_storage
 
 ---
 
-### 🔐 Step 2: Ensure Permissions Are Correct
+### 🔐 Step 6: Ensure Permissions Are Correct
 
 ```bash
 sudo chown -R root:root /data/beegfs/beegfs_meta
@@ -28,7 +119,7 @@ sudo chown -R root:root /data/beegfs/beegfs_storage
 
 ---
 
-### ⚙️ Step 3: Setup Metadata Service
+### ⚙️ Step 7: Setup Metadata Service
 
 ```bash
 sudo /opt/beegfs/sbin/beegfs-setup-meta -p /data/beegfs/beegfs_meta -s 2 -m localhost
@@ -43,7 +134,7 @@ sudo /opt/beegfs/sbin/beegfs-setup-meta -p /data/beegfs/beegfs_meta -s 2 -m loca
 
 ---
 
-### ⚙️ Step 4: Setup Storage Service
+### ⚙️ Step 8: Setup Storage Service
 
 ```bash
 sudo /opt/beegfs/sbin/beegfs-setup-storage -p /data/beegfs/beegfs_storage -s 3 -i 301 -m localhost
@@ -59,7 +150,7 @@ sudo /opt/beegfs/sbin/beegfs-setup-storage -p /data/beegfs/beegfs_storage -s 3 -
 
 ---
 
-### 🛠 Step 5: Edit Configuration Files (Optional)
+### 🛠 Step 9: Edit Configuration Files (Optional)
 
 > These are only needed if you want to **change settings**, like where BeeGFS should look for the storage paths.
 
@@ -78,7 +169,7 @@ storeStorageDirectory = /data/beegfs/beegfs_storage
 
 ---
 
-### ▶️ Step 6: Start the Services
+### ▶️ Step 10: Start the Metadata & Storage Services
 
 ```bash
 sudo systemctl start beegfs-meta
@@ -96,7 +187,7 @@ sudo systemctl enable beegfs-storage
 
 ---
 
-### 🧪 Step 7: Check Logs and Status (Optional)
+### 🧪 Step 11: Check Logs and Status (Optional)
 
 **Check service status**:
 ```bash
@@ -114,46 +205,52 @@ journalctl -u beegfs-storage --no-pager
 
 ---
 
-### ⏹️ Step 8: Stop the Services
+### ⏹️ Step 12: Stop All Services
 
-**To stop the services**:
+**To stop all services**:
 ```bash
+sudo systemctl stop beegfs-mgmtd
 sudo systemctl stop beegfs-meta
 sudo systemctl stop beegfs-storage
 ```
 
 **To disable them from auto-starting on boot**:
 ```bash
+sudo systemctl disable beegfs-mgmtd
 sudo systemctl disable beegfs-meta
 sudo systemctl disable beegfs-storage
 ```
 
-**Why**: Use these commands when you need to stop the BeeGFS services for maintenance, troubleshooting, or system shutdown.
+**Why**: Use these commands when you need to stop all BeeGFS services for maintenance, troubleshooting, or system shutdown.
 
 ---
 
 ## 📋 Quick Reference Commands
 
-### Start Services
+### Start All Services
 ```bash
+sudo systemctl start beegfs-mgmtd
 sudo systemctl start beegfs-meta
 sudo systemctl start beegfs-storage
 ```
 
-### Stop Services
+### Stop All Services
 ```bash
+sudo systemctl stop beegfs-mgmtd
 sudo systemctl stop beegfs-meta
 sudo systemctl stop beegfs-storage
 ```
 
 ### Check Status
 ```bash
+sudo systemctl status beegfs-mgmtd
 sudo systemctl status beegfs-meta
 sudo systemctl status beegfs-storage
 ```
 
 ### View Logs
 ```bash
+journalctl -u beegfs-mgmtd --no-pager
 journalctl -u beegfs-meta --no-pager
 journalctl -u beegfs-storage --no-pager
 ```
@@ -166,24 +263,38 @@ After setup, your directory structure will look like:
 
 ```
 /data/beegfs/
+├── mgmtd/              # Management database directory (optional custom location)
+│   └── mgmtd.sqlite    # Management database file
 ├── beegfs_meta/        # Metadata storage directory
 └── beegfs_storage/     # File data storage directory
 ```
 
 ---
 
+## 🛑 Production Security Considerations
+
+For production systems:
+
+* Do **not** use `tls-disable` or `auth-disable` in the management configuration.
+* Instead, configure proper TLS certificates and client authentication as outlined in the BeeGFS Admin Guide.
+* Use dedicated partitions instead of directories for better performance and isolation.
+
+---
+
 ## 📝 Notes
 
-1. **Single Machine Setup**: This guide is for running both metadata and storage services on the same machine.
+1. **Single Machine Setup**: This guide is for running management, metadata, and storage services on the same machine.
 2. **No Partitions**: We're using directories instead of dedicated partitions for simplicity.
 3. **Root User**: Services run as root - adjust permissions if using a different user.
 4. **Service IDs**: Make sure to use unique IDs (-s and -i parameters) if setting up multiple services.
-5. **Management Node**: This assumes you have a BeeGFS management node running on localhost.
+5. **Management Database**: The management service must be initialized before starting for the first time.
+6. **Service Order**: Start management service first, then metadata and storage services.
 
 ---
 
 ## 🔗 Related Documentation
 
-- For management node setup, see the BeeGFS management documentation
 - For client setup and mounting, see the BeeGFS client documentation
 - For production deployments, consider using dedicated partitions instead of directories
+- For advanced configuration options, see the BeeGFS Admin Guide
+- For multi-node setups, configure each service on separate machines
