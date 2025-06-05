@@ -1,3 +1,6 @@
+TO do client setup and other info soon
+
+
 # BeeGFS Complete Setup Guide (Single Machine)
 
 This document provides a complete, documented list of all key commands used to manually set up **BeeGFS management, metadata and storage services on a single machine** without creating partitions.
