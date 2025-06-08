@@ -165,3 +165,5 @@ Hello World
 
 ## Bug Fix Note
 There's a small bug in the original code: `buffer[50] = '\0';` should be `buffer[49] = '\0';` or better yet, `buffer[bytes_read] = '\0';` where `bytes_read` is the return value from `read()`.
+check out my notion for better understanding
+https://www.notion.so/File-Systems-208a8210e16e80e9b2adccacb1fbc13a
