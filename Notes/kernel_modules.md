@@ -148,7 +148,7 @@ make
 ```bash
 sudo make install     # Installs to /lib/modules/
 sudo depmod -a        # Updates module dependency tree
-sudo modprobe driver_name #load the new module
+sudo modprobe driver_name   #load the new module
 ```
 
 
