@@ -312,3 +312,4 @@ Package management solved the chaos of manual software installation by providing
 ✅ **Centralized software distribution**
 
 The evolution from manual compilation to package managers represents one of the most significant improvements in Linux system administration, making software management reliable, secure, and user-friendly.
+notion for more info- https://www.notion.so/Package-Management-20fa8210e16e804fa731dd2397ecc0ae?source=copy_link
