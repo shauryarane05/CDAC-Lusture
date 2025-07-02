@@ -474,3 +474,11 @@ You can think of `aclocal.m4` as a macro dictionary. When autoconf reads `config
 | `aclocal.m4`         | Supplies macro definitions to `autoconf`                 |
 | `autoconf`           | Expands macros from `configure.ac` using `aclocal.m4`    |
 | Without `aclocal.m4` | Autoconf may fail to process external/third-party macros |
+
+| Concept        | Role                                                                       |
+| -------------- | -------------------------------------------------------------------------- |
+| `m4`           | Macro processing language used by Autoconf                                 |
+| `config/*.m4`  | Contains macro *definitions* (modular, reusable checks/features)           |
+| `aclocal.m4`   | Auto-generated macro *collection* (flattened from many .m4s)               |
+| `configure.ac` | Main script that *uses* these macros (written by developer)                |
+| `configure`    | Output shell script that runs and checks your system to generate Makefiles |
